@@ -1,0 +1,34 @@
+<?php
+// (Sử dụng lại mảng $students từ Bài 1)
+
+// Tính và trả về điểm trung bình
+function calculateAverageScore($students) {
+    $totalScore = 0;
+    foreach ($students as $student) {
+        $totalScore += $student["score"];
+    }
+    return count($students) > 0 ? $totalScore / count($students) : 0;
+}
+
+// Trả về xếp loại của sinh viên
+function getRank($score) {
+    if ($score >= 8) return "Giỏi";
+    if ($score >= 6.5) return "Khá";
+    if ($score >= 5) return "Trung bình";
+    return "Yếu";
+}
+
+// Hiển thị thông tin một sinh viên bao gồm xếp loại
+function displayStudent($student) {
+    $rank = getRank($student["score"]);
+    echo "Họ tên: " . $student["name"] . " | Tuổi: " . $student["age"] . " | Điểm: " . $student["score"] . " | Xếp loại: " . $rank . "\n";
+}
+
+
+echo "--- THÔNG TIN VÀ XẾP LOẠI SINH VIÊN ---\n";
+foreach ($students as $student) {
+    displayStudent($student);
+}
+
+echo "\nĐiểm trung bình của danh sách: " . calculateAverageScore($students) . "\n";
+?>
