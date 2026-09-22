@@ -1,0 +1,87 @@
+<?php
+// Xây dựng class Student
+class Student {
+    public $name;
+    public $age;
+    public $score;
+
+    // Constructor để khởi tạo thông tin
+    public function __construct($name, $age, $score) {
+        $this->name = $name;
+        $this->age = $age;
+        $this->score = $score;
+    }
+
+    // Method trả về xếp loại
+    public function getRank() {
+        if ($this->score >= 8) return "Giỏi";
+        if ($this->score >= 6.5) return "Khá";
+        if ($this->score >= 5) return "Trung bình";
+        return "Yếu";
+    }
+
+    // Method kiểm tra sinh viên đạt hay không
+    public function isPassed() {
+        return $this->score >= 5;
+    }
+
+    // Method hiển thị thông tin
+    public function display() {
+        echo "Họ tên: " . $this->name . " | Tuổi: " . $this->age . " | Điểm: " . $this->score . " | Xếp loại: " . $this->getRank() . "\n";
+    }
+}
+
+// --- CÁC HÀM XỬ LÝ DANH SÁCH OBJECT ---
+function getBestOOPStudent($studentsList) {
+    $best = $studentsList[0];
+    foreach ($studentsList as $student) {
+        if ($student->score > $best->score) {
+            $best = $student;
+        }
+    }
+    return $best;
+}
+
+function getPassedOOPCount($studentsList) {
+    $count = 0;
+    foreach ($studentsList as $student) {
+        if ($student->isPassed()) {
+            $count++;
+        }
+    }
+    return $count;
+}
+
+function getOOPClassAverage($studentsList) {
+    if (count($studentsList) == 0) return 0;
+    $total = 0;
+    foreach ($studentsList as $student) {
+        $total += $student->score;
+    }
+    return $total / count($studentsList);
+}
+
+// --- THỰC THI CHƯƠNG TRÌNH ---
+// Tạo danh sách các object Student
+$studentsList = [
+    new Student("Nguyen Van An", 20, 8.5),
+    new Student("Tran Thi Binh", 21, 6.5),
+    new Student("Le Van Cuong", 19, 4.5),
+    new Student("Pham Thi Dung", 20, 7.5)
+];
+
+echo "--- DANH SÁCH LỚP (OOP) ---\n";
+// Duyệt danh sách và gọi display()
+foreach ($studentsList as $student) {
+    $student->display();
+}
+
+// Tìm sinh viên có điểm cao nhất
+$best = getBestOOPStudent($studentsList);
+echo "\nSinh viên có điểm cao nhất: " . $best->name . " (" . $best->score . " điểm)\n";
+
+echo "Số sinh viên đạt (Điểm >= 5): " . getPassedOOPCount($studentsList) . "\n";
+
+// Tính điểm trung bình của lớp
+echo "Điểm trung bình của lớp: " . getOOPClassAverage($studentsList) . "\n";
+?>
