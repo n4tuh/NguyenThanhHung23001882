@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bài 3 - Quản lý công việc</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .completed { text-decoration: line-through; color: gray; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Quản Lý Công Việc</h2>
+        
+        <input type="text" v-model.trim="newTask" @keyup.enter="addTask" placeholder="Nhập công việc...">
+        <button @click="addTask">Thêm</button>
+        
+        <div style="margin: 10px 0;">
+            <button @click="filter = 'all'">Tất cả</button>
+            <button @click="filter = 'active'">Chưa hoàn thành</button>
+            <button @click="filter = 'completed'">Đã hoàn thành</button>
+        </div>
+        
+        <p>Tổng số: {{ tasks.length }} | Chưa hoàn thành: {{ activeCount }}</p>
+        <button @click="clearCompleted" v-if="tasks.length > 0">Xóa các việc đã hoàn thành</button>
+        
+        <p v-if="filteredTasks.length === 0" style="color: red;">Không có công việc nào!</p>
+        
+        <ul>
+            <li v-for="task in filteredTasks" :key="task.id">
+                <input type="checkbox" v-model="task.completed">
+                <span :class="{ completed: task.completed }">{{ task.name }}</span>
+                <button @click="deleteTask(task.id)" style="margin-left: 10px;">Xóa</button>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    newTask: '',
+                    tasks: [],
+                    filter: 'all' // all, active, completed
+                }
+            },
+            computed: {
+                activeCount() {
+                    return this.tasks.filter(t => !t.completed).length;
+                },
+                filteredTasks() {
+                    if (this.filter === 'active') return this.tasks.filter(t => !t.completed);
+                    if (this.filter === 'completed') return this.tasks.filter(t => t.completed);
+                    return this.tasks;
+                }
+            },
+            methods: {
+                addTask() {
+                    if (this.newTask === '') return;
+                    this.tasks.push({
+                        id: Date.now(),
+                        name: this.newTask,
+                        completed: false
+                    });
+                    this.newTask = '';
+                },
+                deleteTask(id) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                },
+                clearCompleted() {
+                    this.tasks = this.tasks.filter(t => !t.completed);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
