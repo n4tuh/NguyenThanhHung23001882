@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bài 2 - Component Danh mục</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="./components/TheSanPham.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h2>Danh mục sản phẩm</h2>
+        <the-san-pham 
+            v-for="(sp, index) in sanPhams" 
+            :key="index"
+            :ten="sp.ten"
+            :gia="sp.gia"
+            :anh="sp.anh"
+            :mo-ta="sp.moTa"
+            :so-luong="sp.soLuong"
+        ></the-san-pham>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    sanPhams: [
+                        { ten: 'Bàn phím cơ', gia: 800000, moTa: 'Bàn phím cơ Blue Switch gõ siêu ồn.', soLuong: 10 },
+                        { ten: 'Chuột Logitech', gia: 450000, moTa: 'Chuột không dây 2.4Ghz.', soLuong: 0 },
+                        { ten: 'Màn hình 24 inch', gia: 3000000, anh: 'https://via.placeholder.com/150/0000FF', moTa: 'Màn hình IPS 75Hz màu sắc chân thực.', soLuong: 5 },
+                        { ten: 'Lót chuột', gia: 50000, moTa: 'Lót chuột size lớn 80x30cm.', soLuong: 20 }
+                    ]
+                }
+            }
+        });
+        
+        // Đăng ký component toàn cục
+        app.component('the-san-pham', TheSanPham);
+        app.mount('#app');
+    </script>
+</body>
+</html>
