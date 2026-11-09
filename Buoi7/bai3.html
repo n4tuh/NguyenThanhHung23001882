@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bài 3 - Giỏ Hàng</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .cart-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .controls button { margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Giỏ hàng của bạn</h2>
+        
+        <div v-if="gioHang.length === 0" style="color: red; font-style: italic;">
+            Giỏ hàng trống
+        </div>
+        <div v-else>
+            <dong-gio-hang 
+                v-for="item in gioHang" 
+                :key="item.id"
+                :item="item"
+                @doi-so-luong="capNhatSoLuong"
+                @yeu-cau-xoa="xoaSanPham"
+            ></dong-gio-hang>
+            
+            <div style="margin-top: 20px; font-size: 1.2em;">
+                <strong>Tổng số lượng:</strong> {{ tongSoLuong }} <br>
+                <strong>Tổng tiền:</strong> <span style="color: red;">{{ tongTien.toLocaleString() }} VNĐ</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DongGioHang = {
+            props: ['item'],
+            template: `
+                <div class="cart-item">
+                    <div style="flex: 2">{{ item.ten }}</div>
+                    <div style="flex: 1">{{ item.donGia.toLocaleString() }}đ</div>
+                    <div class="controls" style="flex: 2">
+                        <button @click="giamSoLuong">-</button>
+                        <span>{{ item.soLuong }}</span>
+                        <button @click="tangSoLuong">+</button>
+                    </div>
+                    <div style="flex: 1; font-weight: bold;">
+                        {{ (item.donGia * item.soLuong).toLocaleString() }}đ
+                    </div>
+                    <div>
+                        <button @click="$emit('yeu-cau-xoa', item.id)">Xóa</button>
+                    </div>
+                </div>
+            `,
+            methods: {
+                tangSoLuong() {
+                    let newQty = this.item.soLuong + 1;
+                    if (newQty <= 99) {
+                        this.$emit('doi-so-luong', this.item.id, newQty);
+                    }
+                },
+                giamSoLuong() {
+                    let newQty = this.item.soLuong - 1;
+                    if (newQty >= 1) {
+                        this.$emit('doi-so-luong', this.item.id, newQty);
+                    }
+                }
+            }
+        };
+
+        const app = Vue.createApp({
+            components: {
+                'dong-gio-hang': DongGioHang
+            },
+            data() {
+                return {
+                    gioHang: [
+                        { id: 1, ten: 'Bút', donGia: 5000, soLuong: 2 },
+                        { id: 2, ten: 'Quyển vở', donGia: 12000, soLuong: 3 }
+                    ]
+                }
+            },
+            computed: {
+                tongSoLuong() {
+                    return this.gioHang.reduce((sum, item) => sum + item.soLuong, 0);
+                },
+                tongTien() {
+                    return this.gioHang.reduce((sum, item) => sum + (item.donGia * item.soLuong), 0);
+                }
+            },
+            methods: {
+                capNhatSoLuong(id, soLuongMoi) {
+                    if (soLuongMoi >= 1 && soLuongMoi <= 99) {
+                        const sp = this.gioHang.find(item => item.id === id);
+                        if (sp) sp.soLuong = soLuongMoi;
+                    }
+                },
+                xoaSanPham(id) {
+                    this.gioHang = this.gioHang.filter(item => item.id !== id);
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
