@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bài 1 - Quản lý sản phẩm</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .con-hang { color: green; font-weight: bold; }
+        .het-hang { color: red; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Trạng thái: {{ trangThai }}</h2>
+        <p style="color: orange" v-if="thongBaoTuKhoa">{{ thongBaoTuKhoa }}</p>
+
+        <!-- Bộ lọc và tìm kiếm -->
+        <div>
+            <input type="text" v-model="tuKhoa" placeholder="Tìm kiếm theo tên...">
+            <select v-model="danhMucChon">
+                <option value="">Tất cả danh mục</option>
+                <option value="Điện thoại">Điện thoại</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Phụ kiện">Phụ kiện</option>
+            </select>
+            <select v-model="sapXepGia">
+                <option value="">Không sắp xếp</option>
+                <option value="tang">Giá tăng dần</option>
+                <option value="giam">Giá giảm dần</option>
+            </select>
+        </div>
+
+        <!-- Thêm sản phẩm -->
+        <div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd;">
+            <h3>Thêm sản phẩm mới</h3>
+            <input type="text" v-model="spMoi.ten" placeholder="Tên sản phẩm">
+            <input type="number" v-model="spMoi.gia" placeholder="Giá" min="1">
+            <select v-model="spMoi.danhMuc">
+                <option value="Điện thoại">Điện thoại</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Phụ kiện">Phụ kiện</option>
+            </select>
+            <input type="number" v-model="spMoi.soLuong" placeholder="Số lượng tồn" min="0">
+            <button @click="themSanPham">Thêm</button>
+            <p style="color: red" v-if="loiThemSp">{{ loiThemSp }}</p>
+        </div>
+
+        <!-- Thống kê -->
+        <p><strong>Hiển thị:</strong> {{ soSanPhamHienThi }} / {{ danhSachSanPham.length }} sản phẩm. 
+           <strong>Tổng giá trị tồn kho:</strong> {{ tongGiaTriTonKho.toLocaleString() }} VNĐ</p>
+
+        <!-- Bảng hiển thị -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Giá</th>
+                    <th>Danh mục</th>
+                    <th>Tồn kho</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="sp in sanPhamDaLocVaSapXep" :key="sp.id">
+                    <td>{{ sp.id }}</td>
+                    <td>{{ sp.ten }}</td>
+                    <td>{{ sp.gia.toLocaleString() }}</td>
+                    <td>{{ sp.danhMuc }}</td>
+                    <td>{{ sp.soLuong }}</td>
+                    <td>
+                        <span :class="sp.soLuong > 0 ? 'con-hang' : 'het-hang'">
+                            {{ sp.soLuong > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                        </span>
+                    </td>
+                    <td><button @click="xoaSanPham(sp.id)">Xóa</button></td>
+                </tr>
+                <tr v-if="sanPhamDaLocVaSapXep.length === 0">
+                    <td colspan="7" style="text-align: center;">Không có sản phẩm phù hợp</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    trangThai: 'Đang tải...',
+                    tuKhoa: '',
+                    danhMucChon: '',
+                    sapXepGia: '',
+                    thongBaoTuKhoa: '',
+                    loiThemSp: '',
+                    spMoi: { ten: '', gia: '', danhMuc: 'Điện thoại', soLuong: '' },
+                    danhSachSanPham: [
+                        { id: 1, ten: 'iPhone 13', gia: 15000000, danhMuc: 'Điện thoại', soLuong: 10 },
+                        { id: 2, ten: 'Samsung S22', gia: 14000000, danhMuc: 'Điện thoại', soLuong: 0 },
+                        { id: 3, ten: 'Macbook Air', gia: 20000000, danhMuc: 'Laptop', soLuong: 5 },
+                        { id: 4, ten: 'Dell XPS', gia: 25000000, danhMuc: 'Laptop', soLuong: 2 },
+                        { id: 5, ten: 'Tai nghe Sony', gia: 2000000, danhMuc: 'Phụ kiện', soLuong: 20 },
+                        { id: 6, ten: 'Sạc Anker', gia: 500000, danhMuc: 'Phụ kiện', soLuong: 0 },
+                    ]
+                }
+            },
+            computed: {
+                sanPhamDaLocVaSapXep() {
+                    let ketQua = [...this.danhSachSanPham];
+
+                    if (this.tuKhoa) {
+                        ketQua = ketQua.filter(sp => sp.ten.toLowerCase().includes(this.tuKhoa.toLowerCase()));
+                    }
+                    if (this.danhMucChon) {
+                        ketQua = ketQua.filter(sp => sp.danhMuc === this.danhMucChon);
+                    }
+                    
+                    if (this.sapXepGia === 'tang') {
+                        ketQua.sort((a, b) => a.gia - b.gia);
+                    } else if (this.sapXepGia === 'giam') {
+                        ketQua.sort((a, b) => b.gia - a.gia);
+                    }
+
+                    return ketQua;
+                },
+                soSanPhamHienThi() {
+                    return this.sanPhamDaLocVaSapXep.length;
+                },
+                tongGiaTriTonKho() {
+                    return this.sanPhamDaLocVaSapXep.reduce((tong, sp) => tong + (sp.gia * sp.soLuong), 0);
+                }
+            },
+            watch: {
+                tuKhoa(giaTriMoi) {
+                    if (giaTriMoi.length === 1) {
+                        this.thongBaoTuKhoa = 'Hãy nhập thêm từ khóa để tìm kiếm chính xác hơn.';
+                    } else {
+                        this.thongBaoTuKhoa = '';
+                    }
+                }
+            },
+            methods: {
+                themSanPham() {
+                    if (!this.spMoi.ten.trim()) {
+                        this.loiThemSp = 'Tên không được để trống!'; return;
+                    }
+                    if (Number(this.spMoi.gia) <= 0) {
+                        this.loiThemSp = 'Giá phải lớn hơn 0!'; return;
+                    }
+                    if (Number(this.spMoi.soLuong) < 0 || !Number.isInteger(Number(this.spMoi.soLuong))) {
+                        this.loiThemSp = 'Tồn kho phải là số nguyên không âm!'; return;
+                    }
+                    
+                    this.loiThemSp = '';
+                    const idMoi = this.danhSachSanPham.length > 0 ? Math.max(...this.danhSachSanPham.map(sp => sp.id)) + 1 : 1;
+                    
+                    this.danhSachSanPham.push({
+                        id: idMoi,
+                        ten: this.spMoi.ten,
+                        gia: Number(this.spMoi.gia),
+                        danhMuc: this.spMoi.danhMuc,
+                        soLuong: Number(this.spMoi.soLuong)
+                    });
+
+                    this.spMoi = { ten: '', gia: '', danhMuc: 'Điện thoại', soLuong: '' };
+                },
+                xoaSanPham(id) {
+                    if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                        this.danhSachSanPham = this.danhSachSanPham.filter(sp => sp.id !== id);
+                    }
+                }
+            },
+            mounted() {
+                this.trangThai = 'Sẵn sàng';
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
