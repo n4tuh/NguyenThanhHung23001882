@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Sản phẩm</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .error { color: red; margin-bottom: 10px; }
+        .form-group { margin-bottom: 10px; }
+        input { padding: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Quản lý Sản phẩm</h2>
+        
+        <div v-if="errorMsg" class="error">{{ errorMsg }}</div>
+
+        <!-- Biểu mẫu Thêm/Sửa -->
+        <form @submit.prevent="saveProduct">
+            <div class="form-group">
+                <label>Tên sản phẩm:</label>
+                <input type="text" v-model="form.name" required>
+            </div>
+            <div class="form-group">
+                <label>Đơn giá:</label>
+                <input type="number" v-model="form.price" required>
+            </div>
+            <div class="form-group">
+                <label>Số lượng tồn:</label>
+                <input type="number" v-model="form.stock" required>
+            </div>
+            <button type="submit">{{ isEditing ? 'Lưu cập nhật' : 'Thêm mới' }}</button>
+            <button type="button" v-if="isEditing" @click="resetForm">Hủy</button>
+        </form>
+
+        <!-- Bảng dữ liệu -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Đơn giá</th>
+                    <th>Số lượng tồn</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="product in products" :key="product.id">
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.price }}</td>
+                    <td>{{ product.stock }}</td>
+                    <td>
+                        <button @click="editProduct(product)">Sửa</button>
+                        <button @click="deleteProduct(product.id)">Xóa</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    products: [],
+                    form: { id: null, name: '', price: '', stock: '' },
+                    isEditing: false,
+                    errorMsg: ''
+                }
+            },
+            mounted() {
+                this.fetchProducts();
+            },
+            methods: {
+                async fetchProducts() {
+                    try {
+                        const res = await fetch('api/products.php');
+                        const json = await res.json();
+                        if (json.success) {
+                            this.products = json.data;
+                        }
+                    } catch (err) {
+                        this.errorMsg = "Lỗi khi tải danh sách sản phẩm.";
+                    }
+                },
+                async saveProduct() {
+                    this.errorMsg = '';
+                    const url = this.isEditing ? `api/products.php?id=${this.form.id}` : 'api/products.php';
+                    const method = this.isEditing ? 'PUT' : 'POST';
+
+                    try {
+                        const res = await fetch(url, {
+                            method: method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: this.form.name,
+                                price: parseInt(this.form.price),
+                                stock: parseInt(this.form.stock)
+                            })
+                        });
+                        const json = await res.json();
+                        
+                        if (json.success) {
+                            this.resetForm();
+                            this.fetchProducts();
+                        } else {
+                            this.errorMsg = json.message;
+                        }
+                    } catch (err) {
+                        this.errorMsg = "Đã xảy ra lỗi khi lưu.";
+                    }
+                },
+                editProduct(product) {
+                    this.isEditing = true;
+                    this.form = { ...product };
+                    this.errorMsg = '';
+                },
+                async deleteProduct(id) {
+                    if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+                    
+                    this.errorMsg = '';
+                    try {
+                        const res = await fetch(`api/products.php?id=${id}`, { method: 'DELETE' });
+                        const json = await res.json();
+                        
+                        if (json.success) {
+                            this.fetchProducts();
+                        } else {
+                            this.errorMsg = json.message;
+                        }
+                    } catch (err) {
+                        this.errorMsg = "Đã xảy ra lỗi khi xóa.";
+                    }
+                },
+                resetForm() {
+                    this.isEditing = false;
+                    this.form = { id: null, name: '', price: '', stock: '' };
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
